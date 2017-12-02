@@ -47,12 +47,4 @@ def photo_get_img_by_category_public():
 def photo_get_categories():
     return get_categories()
 
-@photo_.route('/get_categories', methods=['POST'])
-@login_required
-def photo_get_categories():
-    return get_categories()
-@photo_.route('/get_categories', methods=['POST'])
-@login_required
-def photo_get_categories():
-    return get_categories()
 

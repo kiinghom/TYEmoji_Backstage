@@ -39,4 +39,7 @@ def create_app(configfile=None):
 	from auth import auth_ as AuthPrint
 	app.register_blueprint(AuthPrint, url_prefix='/auth')
 
+	from photo import photo_
+	app.register_blueprint(photo_, url_prefix='/photo')
+
 	return app
