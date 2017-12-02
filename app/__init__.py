@@ -15,7 +15,7 @@ lm = LoginManager()
 app = Flask(__name__)
 
 def create_app(configfile=None):
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:daijiarun553@localhost:3306/TYMT?charset=utf8'
+	app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:SEPJ2017@localhost:3306/SEPJ?charset=utf8'
 	app.config['MAIL_SERVER'] = 'smtp.163.com'
 	app.config['MAIL_PORT'] = 465
 	app.config['MAIL_USE_SSL'] = True
