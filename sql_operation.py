@@ -128,4 +128,8 @@ def get_img_by_category_public(category_name,page):
 if __name__ == '__main__':
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:SEPJ2017@localhost:3306/SEPJ?charset=utf8'
     db.init_app(app)
+
+
+    #TODO 这里可以放你的测试代码
+
     app.run(debug=True)
