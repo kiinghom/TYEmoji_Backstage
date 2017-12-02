@@ -1,19 +1,12 @@
-from flask_login import login_user, logout_user, current_user, login_required
-from flask import Blueprint, g, flash, session
-from app import lm, db, app
-
-from app.auth.email import send_email
-from app.auth.token import generate_confirmation_token, confirm_token
-
-from app.auth.form import LoginForm, RegisterForm, ChangePasswordForm
-from flask import render_template, request, redirect, url_for
+# -*- coding: utf-8 -*-
+from app import db, app
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from PIL import Image
 
 class User(db.Model):
     __tablename__ = 'user'
-  	user_email = db.Column(db.String(100),primary_key=True)
+    user_email = db.Column(db.String(100),primary_key=True)
     username = db.Column(db.String(100))
     password = db.Column(db.String(200))
 
@@ -51,14 +44,14 @@ class Template_Image(db.Model):
     insert_width = db.Column(db.Integer)
 
 #1.1注册函数 ，参数为邮箱地址，用户名，密码，确认密码
-def register_func(email,username,password,confirm):  
+def register_func(email,username,password,confirm):
     if not username or not email or not password or not confirm:
         flash('UnComplete Input!', 'error')
         return "INPUTERR"
     if confirm != password:
         flash('Confirm Password!', 'error')
         return "PWDERR"
-    user=User.query.filter_by(user_email=email).first();
+    user=User.query.filter_by(user_email=email).first()
     if user!=None and user.user_email==email:
         print email
         return "REPEAT"
@@ -83,12 +76,12 @@ def login_func(email, password):
             return "WRONGPWD"
 
 #2上传图片函数，将base64转为图片，存在服务器上对应私人文件夹，在数据库中插入对应条目
-def upload_image(email,finished,image_name,base64code_for_img)：
+def upload_image(email,finished,image_name,base64code_for_img):
     if (finished):
         image_path='/root/SEPJIMG/user/'+email+'/finished/'+image_name;
     else:
         image_path='/root/SEPJIMG/user/'+email+'/material/'+image_name;
-    temp_img = open(image_path "wb")
+    temp_img = open(image_path,"wb")
     temp_img.write(base64.b64decode(base64code_for_img))
     temp_img.close();
     img = Image.open(image_path)
@@ -103,7 +96,7 @@ def upload_image(email,finished,image_name,base64code_for_img)：
     db.session.add(user_image)
     db.session.commit()
 
-#2 下载图片到私人文件夹 
+#2 下载图片到私人文件夹
 def download_image(email,finished,image_name,download_img_path):
     if (finished):
         image_path='/root/SEPJIMG/user/'+email+'/finished/'+image_name
@@ -111,7 +104,7 @@ def download_image(email,finished,image_name,download_img_path):
         image_path='/root/SEPJIMG/user/'+email+'/material/'+image_name
     f = open(download_img_path,'rb');
     download_code = base64.b64encode(f.read())
-    temp_img = open(image_path "wb")
+    temp_img = open(image_path,"wb")
     temp_img.write(base64.b64decode(download_code))
     temp_img.close();
     img = Image.open(image_path)
