@@ -6,11 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_pagedown import PageDown
 
-bootstrap = Bootstrap()
-mail = Mail()
-moment = Moment()
+#bootstrap = Bootstrap()
+#mail = Mail()
+#moment = Moment()
 db = SQLAlchemy()
-pagedown = PageDown()
+#pagedown = PageDown()
 lm = LoginManager()
 app = Flask(__name__)
 
@@ -24,11 +24,11 @@ def create_app(configfile=None):
 	app.config['SECURITY_PASSWORD_SALT'] = 'my_precious_two'
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	app.config['SECRET_KEY'] = 'sekrit!'
-	bootstrap.init_app(app)
+	#bootstrap.init_app(app)
 	# mail.init_app(app)
 	# moment.init_app(app)
 	db.init_app(app)
-	pagedown.init_app(app)
+	#pagedown.init_app(app)
 	lm.init_app(app)
 	lm.login_view = 'auth.login'
 
