@@ -9,7 +9,6 @@ class User(db.Model):
     user_email = db.Column(db.String(100),primary_key=True)
     username = db.Column(db.String(100))
     password = db.Column(db.String(200))
-
     def __init__(self, name, email, pwd):
         self.user_email = email
         self.userName = name
@@ -17,7 +16,8 @@ class User(db.Model):
 
 class User_Image(db.Model):
     __tablename__ = 'user_image'
-    image_path = db.Column(db.String(100), primary_key=True)
+    image_id = db.column(db.Integer,primary_key=true,autoincrement=true)
+    image_path = db.Column(db.String(100))
     image_name = db.Column(db.String(100))
     image_height = db.Column(db.Integer)
     image_width = db.Column(db.Integer)
@@ -34,7 +34,8 @@ class Category(db.Model):
 
 class Template_Image(db.Model):
     __tablename__ = 'template_image'
-    image_path = db.Column(db.String(100), primary_key=True)
+    image_id = db.column(db.Integer,primary_key=true,autoincrement=true)
+    image_path = db.Column(db.String(100))
     image_name = db.Column(db.String(100))
     image_height = db.Column(db.Integer)
     image_width = db.Column(db.Integer)
@@ -63,7 +64,6 @@ def register_func(email,username,password,confirm):
     db.session.commit()
     return "SUCCEED"
 
-
 #1.2登录函数，参数为邮箱地址，密码
 def login_func(email, password):
     user = User.query.filter_by(UserEmail=email).first()
@@ -77,13 +77,14 @@ def login_func(email, password):
 
 #2上传图片函数，将base64转为图片，存在服务器上对应私人文件夹，在数据库中插入对应条目
 def upload_image(email,finished,image_name,base64code_for_img):
+    current_id = User_Image.query().all().count()
     if (finished):
-        image_path='/root/SEPJIMG/user/'+email+'/finished/'+image_name;
+        image_path='/root/SEPJIMG/user/'+email+'/finished/'+current_id
     else:
-        image_path='/root/SEPJIMG/user/'+email+'/material/'+image_name;
+        image_path='/root/SEPJIMG/user/'+email+'/material/'+current_id
     temp_img = open(image_path,"wb")
     temp_img.write(base64.b64decode(base64code_for_img))
-    temp_img.close();
+    temp_img.close()
     img = Image.open(image_path)
     pic_width, pic_height= img.size
     user_image=User_Image()
@@ -96,33 +97,18 @@ def upload_image(email,finished,image_name,base64code_for_img):
     db.session.add(user_image)
     db.session.commit()
 
-#2 下载图片到私人文件夹
-def download_image(email,finished,image_name,download_img_path):
-    if (finished):
-        image_path='/root/SEPJIMG/user/'+email+'/finished/'+image_name
-    else:
-        image_path='/root/SEPJIMG/user/'+email+'/material/'+image_name
-    f = open(download_img_path,'rb');
+
+#2 下载图片到手机
+def download_image_to_phone(image_id):
+    this_image = User_Image.query.filter_by(image_id=image_id).first()
+    download_img_path = this_image.image_path
+    f = open(download_img_path,'rb')
     download_code = base64.b64encode(f.read())
-    temp_img = open(image_path,"wb")
-    temp_img.write(base64.b64decode(download_code))
-    temp_img.close();
-    img = Image.open(image_path)
-    pic_width, pic_height= img.size
-    user_image=User_Image()
-    user_image.image_path=image_path
-    user_image.image_name=image_name
-    user_image.image_width=pic_width
-    user_image.image_height=pic_height
-    user_image.public= False
-    user_image.user_email = email
-    db.session.add(user_image)
-    db.session.commit()
-
+    return this_image.image_name,download_code
 
 #3 发布表情包
-def release_emoji(email,image_name,category_name):
-    user_image=User_Image.query.filter_by(user_email=email).filter_by(image_name=image_name).first()
+def release_emoji(image_id,category_name):
+    user_image=User_Image.query.filter_by(image_id=image_id).first()
     user_image.public=True
     user_image.category_name=category_name
     db.session.commit()
