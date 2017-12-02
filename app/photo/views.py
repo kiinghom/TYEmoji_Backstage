@@ -40,11 +40,7 @@ def photo_get_categories():
 @photo_.route('/get_img_by_category_public', methods=['POST'])
 @login_required
 def photo_get_img_by_category_public():
-    return get_img_by_category_public()
-
-@photo_.route('/get_categories', methods=['POST'])
-@login_required
-def photo_get_categories():
-    return get_categories()
+    return get_img_by_category_public(request.form['category_name'],
+                                      int(request.form['page']))
 
 
