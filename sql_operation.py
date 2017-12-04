@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-from app import db, app
+from flask import Flask
 from werkzeug.security import check_password_hash, generate_password_hash
-
+import os
 from PIL import Image
+from flask_sqlalchemy import SQLAlchemy
+import base64
+from app import db,app
 
 class User(db.Model):
     __tablename__ = 'user'
     user_email = db.Column(db.String(100),primary_key=True)
     username = db.Column(db.String(100))
     password = db.Column(db.String(200))
-    def __init__(self, name, email, pwd):
-        self.user_email = email
-        self.userName = name
-        self.password = generate_password_hash(pwd)
 
 class User_Image(db.Model):
     __tablename__ = 'user_image'
-    image_id = db.column(db.Integer,primary_key=true,autoincrement=true)
+    image_id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     image_path = db.Column(db.String(100))
     image_name = db.Column(db.String(100))
     image_height = db.Column(db.Integer)
@@ -34,7 +33,7 @@ class Category(db.Model):
 
 class Template_Image(db.Model):
     __tablename__ = 'template_image'
-    image_id = db.column(db.Integer,primary_key=true,autoincrement=true)
+    image_id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     image_path = db.Column(db.String(100))
     image_name = db.Column(db.String(100))
     image_height = db.Column(db.Integer)
@@ -47,10 +46,8 @@ class Template_Image(db.Model):
 #1.1注册函数 ，参数为邮箱地址，用户名，密码，确认密码
 def register_func(email,username,password,confirm):
     if not username or not email or not password or not confirm:
-        flash('UnComplete Input!', 'error')
         return "INPUTERR"
     if confirm != password:
-        flash('Confirm Password!', 'error')
         return "PWDERR"
     user=User.query.filter_by(user_email=email).first()
     if user!=None and user.user_email==email:
@@ -62,11 +59,14 @@ def register_func(email,username,password,confirm):
     user.password=generate_password_hash(password)
     db.session.add(user)
     db.session.commit()
+    os.mkdir('/root/SEPJIMG/user/'+email)
+    os.mkdir('/root/SEPJIMG/user/'+email+'/finished')
+    os.mkdir('/root/SEPJIMG/user/'+email+'/material')
     return "SUCCEED"
 
 #1.2登录函数，参数为邮箱地址，密码
 def login_func(email, password):
-    user = User.query.filter_by(UserEmail=email).first()
+    user = User.query.filter_by(user_email=email).first()
     if user == None:
         return "NOACCOUNT"
     else:
@@ -77,11 +77,11 @@ def login_func(email, password):
 
 #2上传图片函数，将base64转为图片，存在服务器上对应私人文件夹，在数据库中插入对应条目
 def upload_image(email,finished,image_name,base64code_for_img):
-    current_id = User_Image.query().all().count()
+    current_id = User_Image.query.count()+1
     if (finished):
-        image_path='/root/SEPJIMG/user/'+email+'/finished/'+current_id
+        image_path='/root/SEPJIMG/user/'+email+'/finished/'+str(current_id)
     else:
-        image_path='/root/SEPJIMG/user/'+email+'/material/'+current_id
+        image_path='/root/SEPJIMG/user/'+email+'/material/'+str(current_id)
     temp_img = open(image_path,"wb")
     temp_img.write(base64.b64decode(base64code_for_img))
     temp_img.close()
@@ -115,21 +115,31 @@ def release_emoji(image_id,category_name):
 
 #4 获取类别信息
 def get_categories():
-    return Category.query().all()
+    return Category.query.all()
 
 #5.1 获取某类别的第page页图片 （公共）
 def get_img_by_category_public(category_name,page):
-    return  User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5)
+    return  User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5).all()
 
 #5.2 获取某类别的第page页图片 （用户自身）
 #def get_img_by_category_personal(email,category_name,page):
  #   return User_Image.query.filter_by(category_name=category_name).filter_by(user_email=email).order_by(User_Image.image_name).offset(page*5).limit(5)
 
-if __name__ == '__main__':
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:SEPJ2017@localhost:3306/SEPJ?charset=utf8'
-    db.init_app(app)
-
-
-    #TODO 这里可以放你的测试代码
-
-    app.run(debug=True)
+#app = Flask(__name__)
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:SEPJ2017@localhost:3306/SEPJ?charset=utf8'
+#db.init_app(app)
+#ctx = app.app_context()
+#ctx.push() 
+#test case
+#print '1',register_func('163@163.com','ljh','test','test')
+#print '1.1',login_func('163@163.com','test');
+#print '2',download_image_to_phone(3)
+#print '3',release_emoji(5,'happy');
+#print '3',release_emoji(6,'happy');
+#print '3',release_emoji(7,'happy');
+#print '3',release_emoji(8,'happy');
+#print '3',release_emoji(9,'happy');
+#print '4',get_categories()
+#print '5',get_img_by_category_public('happy',1)
+	
+#app.run(debug=True)
