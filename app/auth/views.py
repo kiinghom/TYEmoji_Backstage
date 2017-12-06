@@ -10,7 +10,7 @@ auth_ = Blueprint('auth', __name__)
 
 @lm.user_loader
 def load_user(id):
-    return User.query.filter_by(UserEmail=str(id)).first()
+    return User.query.filter_by(user_email=str(id)).first()
 
 @app.before_request
 def before_request():
@@ -28,7 +28,7 @@ def register():
 
 @auth_.route('/login', methods=['POST'])
 def login():
-    ret, user = login_func(request.form['email'],request.form['password'])
+    user,ret = login_func(request.form['email'],request.form['password'])
     if user != None:
         login_user(user)
     return jsonify({

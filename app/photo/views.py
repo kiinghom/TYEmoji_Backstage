@@ -12,7 +12,7 @@ photo_ = Blueprint('photo', __name__)
 @login_required
 def photo_upload():
     upload_image(g.user.user_email, bool(request.form['finished']),request.form['image_name'],request.form['base64code'])
-    return jsionfy({'type':'SUCCEED'})
+    return jsonify({'type':'SUCCEED'})
 
 @photo_.route('/download', methods=['POST'])
 @login_required

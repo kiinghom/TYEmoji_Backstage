@@ -14,6 +14,12 @@ class User(db.Model):
     user_email = db.Column(db.String(100),primary_key=True)
     username = db.Column(db.String(100))
     password = db.Column(db.String(200))
+    def is_active(self):
+        return True
+    def get_id(self):
+        return self.user_email
+    def is_authenticated(self):
+        return True
 
 class User_Image(db.Model):
     __tablename__ = 'user_image'
@@ -78,12 +84,12 @@ def register_func(email,username,password,confirm):
 def login_func(email, password):
     user = User.query.filter_by(user_email=email).first()
     if user == None:
-        return "NOACCOUNT"
+        return None,"NOACCOUNT"
     else:
         if check_password_hash(user.password, password):
-            return "SUCCEED"
+            return user,"SUCCEED"
         else:
-            return "WRONGPWD"
+            return None,"WRONGPWD"
 
 #2上传图片函数，将base64转为图片，存在服务器上对应私人文件夹，在数据库中插入对应条目
 def upload_image(email,finished,image_name,base64code_for_img):
