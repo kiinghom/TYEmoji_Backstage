@@ -5,8 +5,10 @@ import os
 from PIL import Image
 from flask_sqlalchemy import SQLAlchemy
 import base64
-from app import db,app
+from app import app,db
+import json
 
+#db=SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'user'
     user_email = db.Column(db.String(100),primary_key=True)
@@ -23,6 +25,10 @@ class User_Image(db.Model):
     public = db.Column(db.Boolean)
     category_name = db.Column(db.String(100))
     user_email = db.Column(db.String(100))
+    def dump(self):
+        return {'image_id': self.image_id,
+                'base64code': base64.b64encode(open(self.image_path,'rb').read()),
+                'image_name': self.image_name}
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -30,6 +36,10 @@ class Category(db.Model):
     category_cover_path = db.Column(db.String(100))
     category_description = db.Column(db.String(200))
     finished = db.Column(db.Boolean)
+    def dump(self):
+        return {'category_name': self.category_name,
+                'category_description': self.category_description,
+               'finished': self.finished}
 
 class Template_Image(db.Model):
     __tablename__ = 'template_image'
@@ -104,7 +114,7 @@ def download_image_to_phone(image_id):
     download_img_path = this_image.image_path
     f = open(download_img_path,'rb')
     download_code = base64.b64encode(f.read())
-    return this_image.image_name,download_code
+    return download_code
 
 #3 发布表情包
 def release_emoji(image_id,category_name):
@@ -115,11 +125,13 @@ def release_emoji(image_id,category_name):
 
 #4 获取类别信息
 def get_categories():
-    return Category.query.all()
+    test = Category.query.all()
+    return json.dumps([o.dump() for o in test])
 
 #5.1 获取某类别的第page页图片 （公共）
 def get_img_by_category_public(category_name,page):
-    return  User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5).all()
+    test = User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5).all()
+    return json.dumps([o.dump() for o in test])
 
 #5.2 获取某类别的第page页图片 （用户自身）
 #def get_img_by_category_personal(email,category_name,page):
