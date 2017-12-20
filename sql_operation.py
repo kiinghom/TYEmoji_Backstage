@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 import base64
 from app import app,db
 import json
+from sqlalchemy import desc
 
 #db=SQLAlchemy()
 class User(db.Model):
@@ -34,7 +35,11 @@ class User_Image(db.Model):
     def dump(self):
         return {'image_id': self.image_id,
                 'base64code': base64.b64encode(open(self.image_path,'rb').read()),
-                'image_name': self.image_name}
+                'image_name': self.image_name,
+                'category_name':self.category_name,
+                'user_email':self.user_email,
+                'public':self.public
+                }
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -45,7 +50,8 @@ class Category(db.Model):
     def dump(self):
         return {'category_name': self.category_name,
                 'category_description': self.category_description,
-               'finished': self.finished}
+                'base64code': base64.b64encode(open(self.category_cover_path,'rb').read()),
+                'finished': self.finished}
 
 class Template_Image(db.Model):
     __tablename__ = 'template_image'
@@ -58,6 +64,12 @@ class Template_Image(db.Model):
     insert_y = db.Column(db.Integer)
     insert_height = db.Column(db.Integer)
     insert_width = db.Column(db.Integer)
+
+class Popular_Image(db.Model):
+	__tablename__ = 'popular_img'
+	image_id = db.Column(db.Integer,primary_key=True)
+	upvote = db.Column(db.Integer)
+
 
 #1.1注册函数 ，参数为邮箱地址，用户名，密码，确认密码
 def register_func(email,username,password,confirm):
@@ -117,10 +129,7 @@ def upload_image(email,finished,image_name,base64code_for_img):
 #2 下载图片到手机
 def download_image_to_phone(image_id):
     this_image = User_Image.query.filter_by(image_id=image_id).first()
-    download_img_path = this_image.image_path
-    f = open(download_img_path,'rb')
-    download_code = base64.b64encode(f.read())
-    return download_code
+    return this_image.dump()  
 
 #3 发布表情包
 def release_emoji(image_id,category_name):
@@ -139,10 +148,29 @@ def get_img_by_category_public(category_name,page):
     test = User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5).all()
     return json.dumps([o.dump() for o in test])
 
-#5.2 获取某类别的第page页图片 （用户自身）
-#def get_img_by_category_personal(email,category_name,page):
- #   return User_Image.query.filter_by(category_name=category_name).filter_by(user_email=email).order_by(User_Image.image_name).offset(page*5).limit(5)
+#5.2获取用户图片
+def get_img_by_user(email,page):
+    test = User_Image.query.filter_by(user_email=email).order_by(User_Image.image_name).offset(page*5).limit(5).all() 
+    return json.dumps([o.dump() for o in test])
 
+#6获取热门图片
+def get_popular_img(page):
+    test = Popular_Image.query.order_by(desc(Popular_Image.upvote)).offset(page*5).limit(5).all()
+    arr=[]
+    for each in test:
+        this_image = User_Image.query.filter_by(image_id=each.image_id).first()
+        this_popular_img = this_image.dump()
+        this_popular_img['upvote']=each.upvote
+        arr.append(this_popular_img)
+    return arr
+
+
+#7点赞
+def upvote(image_id):
+    popular_img=Popular_Image.query.filter_by(image_id=image_id).first()
+    popular_img.upvote=popular_img.upvote+1;
+    db.session.commit()
+	
 #app = Flask(__name__)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:SEPJ2017@localhost:3306/SEPJ?charset=utf8'
 #db.init_app(app)
