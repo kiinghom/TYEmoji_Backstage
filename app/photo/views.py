@@ -17,7 +17,7 @@ def photo_upload():
 @photo_.route('/download', methods=['POST'])
 @login_required
 def photo_download():
-    return download_image_to_phone(request.form['image_id'])
+    return jsonify(download_image_to_phone(request.form['image_id']))
 
 @photo_.route('/release_emoji', methods=['POST'])
 @login_required
@@ -35,4 +35,21 @@ def photo_get_categories():
 def photo_get_img_by_category_public():
     return get_img_by_category_public(request.form['category_name'],
                                       int(request.form['page']))
+
+@photo_.route('/get_img_by_user', methods=['POST'])
+@login_required
+def photo_get_img_by_user():
+    return get_img_by_user(g.user.user_email,
+                                      int(request.form['page']))
+
+@photo_.route('/get_popular_img', methods=['POST'])
+@login_required
+def photo_get_popular_img():
+    return jsonify(get_popular_img(int(request.form['page'])))
+
+@photo_.route('/upvote', methods=['POST'])
+@login_required
+def photo_upvote():
+    upvote(request.form['image_id'])
+    return jsonify({'type':'SUCCEED'})
 
