@@ -8,37 +8,19 @@ from sql_operation import User, login_func, register_func
 
 auth_ = Blueprint('auth', __name__)
 
-@lm.user_loader
-def load_user(id):
-    return User.query.filter_by(user_email=str(id)).first()
-
-@app.before_request
-def before_request():
-    g.user = current_user
-
-@auth_.route('/register', methods=['POST'])
+@auth_.route('/register', methods=['GET'])
 def register():
-    ret = register_func(request.form['email'],
-                        request.form['username'],
-                        request.form['password'],
-                        request.form['confirm'])
-    return jsonify({
-        'type': ret
-    })
+    ret = register_func(request.args.get('email'),
+                        request.args.get('username'),
+                        request.args.get('password'),
+                        request.args.get('confirm'))
+    return jsonify({'type': ret})
 
-@auth_.route('/login', methods=['POST'])
+@auth_.route('/login', methods=['GET'])
 def login():
-    user,ret = login_func(request.form['email'],request.form['password'])
-    if user != None:
-        login_user(user)
-    return jsonify({
-        'type': ret
-    })
+    user,ret = login_func(request.args.get('email'), request.args.get('password'),)
+    return jsonify({'type': ret})
 
-@auth_.route('/logout', methods=['GET', 'POST'])
-@login_required
+@auth_.route('/logout', methods=['GET'])
 def logout():
-    logout_user()
-    return jsonify({
-        'type': 'SUCCEED'
-    })
+    return jsonify({'type': 'SUCCEED'})
