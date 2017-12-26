@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask
+from flask import Flask,jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 from PIL import Image
@@ -21,6 +21,8 @@ class User(db.Model):
         return self.user_email
     def is_authenticated(self):
         return True
+    def is_anonymous(self):
+        return False
 
 class User_Image(db.Model):
     __tablename__ = 'user_image'
@@ -32,13 +34,17 @@ class User_Image(db.Model):
     public = db.Column(db.Boolean)
     category_name = db.Column(db.String(100))
     user_email = db.Column(db.String(100))
+    upvote = db.Column(db.Integer)
     def dump(self):
         return {'image_id': self.image_id,
-                'base64code': base64.b64encode(open(self.image_path,'rb').read()),
+                'file_id':self.image_id,
+                'image_path':self.image_path,
                 'image_name': self.image_name,
                 'category_name':self.category_name,
                 'user_email':self.user_email,
-                'public':self.public
+                'public':self.public,
+                'like_number':self.upvote,
+                'groupid':self.category_name
                 }
 
 class Category(db.Model):
@@ -47,11 +53,15 @@ class Category(db.Model):
     category_cover_path = db.Column(db.String(100))
     category_description = db.Column(db.String(200))
     finished = db.Column(db.Boolean)
+    category_id = db.Column(db.Integer)
     def dump(self):
-        return {'category_name': self.category_name,
-                'category_description': self.category_description,
-                'base64code': base64.b64encode(open(self.category_cover_path,'rb').read()),
-                'finished': self.finished}
+        return  ({
+                'tid':self.category_id,
+                'name': self.category_name,
+                #'category_description': self.category_description,
+                'icon': "http://47.100.30.141:5000/photo/get_image_by_path?image_path="+self.category_cover_path,
+                #'finished': self.finished
+                })
 
 class Template_Image(db.Model):
     __tablename__ = 'template_image'
@@ -139,14 +149,30 @@ def release_emoji(image_id,category_name):
     db.session.commit()
 
 #4 获取类别信息
-def get_categories():
+def get_categories(screen_height,screen_width):
     test = Category.query.all()
-    return json.dumps([o.dump() for o in test])
+    category_array= [o.dump() for o in test]
+    for i in range(len(category_array)):
+        category_array[i]['icon'] = category_array[i]['icon'] + "&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)
+        category_array[i]['url']='http://47.100.30.141:5000/photo/get_img_by_category_public?category_name='+category_array[i]['name']+"&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)
+    return json.dumps(category_array)
 
 #5.1 获取某类别的第page页图片 （公共）
-def get_img_by_category_public(category_name,page):
+def get_img_by_category_public(category_name,screen_height,screen_width,page):
+    this_category_id=Category.query.filter_by(category_name=category_name).first().category_id
+    print this_category_id
     test = User_Image.query.filter_by(category_name=category_name).filter_by(public=True).order_by(User_Image.image_name).offset(page*5).limit(5).all()
-    return json.dumps([o.dump() for o in test])
+    image_array = [o.dump() for o in test]  
+    for i in range(len(image_array)):
+        image={"small":'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height/3)+"&screen_width="+str(screen_width/3),
+                'original':'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)}
+        #image_array[i]['image']['small']='http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height/3)+"&screen_width="+str(screen_width/3)
+        #image_array[i]['image']['big']='http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)
+        image_array[i]['image']=image
+        image_array[i]['groupid']=this_category_id
+    #return json.dumps([o.dump() for o in test])
+    #return json.dumps(image_array)
+    return image_array
 
 #5.2获取用户图片
 def get_img_by_user(email,page):
