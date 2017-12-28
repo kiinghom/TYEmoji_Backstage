@@ -175,9 +175,25 @@ def get_img_by_category_public(category_name,screen_height,screen_width,page):
     return image_array
 
 #5.2获取用户图片
-def get_img_by_user(email,page):
+def get_img_by_user(email,screen_height,screen_width,page):
     test = User_Image.query.filter_by(user_email=email).order_by(User_Image.image_name).offset(page*5).limit(5).all() 
-    return json.dumps([o.dump() for o in test])
+    image_array = [o.dump() for o in test]
+    for i in range(len(image_array)):
+        image={"small":'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height/3)+"&screen_width="+str(screen_width/3),
+                'original':'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)}
+        image_array[i]['image']=image
+    return image_array
+    #return json.dumps([o.dump() for o in test])
+
+#获取点赞数最多的图片
+def get_img_by_upvote(screen_height,screen_width,page):
+    test = User_Image.query.filter_by(public=True).order_by(desc(User_Image.upvote)).offset(page*5).limit(5).all() 
+    image_array = [o.dump() for o in test]
+    for i in range(len(image_array)):
+        image={"small":'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height/3)+"&screen_width="+str(screen_width/3),
+                'original':'http://47.100.30.141:5000/photo/get_image_by_path?image_path='+image_array[i]['image_path']+"&screen_height="+str(screen_height)+"&screen_width="+str(screen_width)}
+        image_array[i]['image']=image
+    return image_array
 
 #6获取热门图片
 def get_popular_img(page):
